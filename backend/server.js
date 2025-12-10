@@ -32,7 +32,6 @@ app.get("/api/sheet/:sheetName", async (req, res) => {
     }
 
     res.json(data);
-
   } catch (err) {
     console.error("Server error:", err.message);
     res.status(500).json({ error: err.message });
@@ -44,7 +43,7 @@ app.get("/api/sheet/:sheetName", async (req, res) => {
 const frontendPath = path.join(__dirname, "../frontend/dist");
 app.use(express.static(frontendPath));
 
-app.get("*", (req, res) => {
+app.get("/*", (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
 
