@@ -9,12 +9,24 @@ app.use(express.json());
 const SHEET_ID = "1gsaJQA4Xf3ofr2xFxP5xFnYgNQhed_mEqtzM9MzFOiE";
 const API_KEY = "AIzaSyAi3dqr2jwtGymEC8P4Mfl8kuLH-1GTeys";
 
-// ================= HEALTH CHECK =================
+/* ================= ROOT HEALTH PAGE ================= */
+app.get("/", (req, res) => {
+  res.json({
+    status: "OK",
+    message: "Co-Creation Backend is Live",
+    endpoints: {
+      test: "/api/test",
+      sheet: "/api/sheet/:sheetName"
+    }
+  });
+});
+
+/* ================= HEALTH CHECK ================= */
 app.get("/api/test", (req, res) => {
   res.json({ message: "Backend is active and operational" });
 });
 
-// ================= DYNAMIC SHEET LOADER =================
+/* ================= GOOGLE SHEET LOADER ================= */
 app.get("/api/sheet/:sheetName", async (req, res) => {
   try {
     const rawName = req.params.sheetName;
@@ -34,16 +46,14 @@ app.get("/api/sheet/:sheetName", async (req, res) => {
       return res.status(500).json({ error: data.error.message });
     }
 
-    console.log("Sheet loaded successfully:", rawName);
     res.json(data);
-
   } catch (err) {
     console.log("Server error:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ================= PORT FOR LOCAL + RENDER =================
+/* ================= RENDER PORT BINDING ================= */
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
