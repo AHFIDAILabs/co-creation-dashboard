@@ -2,13 +2,16 @@ const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
 const path = require("path");
+const NodeCache = require("node-cache");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const SHEET_ID = "1gsaJQA4Xf3ofr2xFxP5xFnYgNQhed_mEqtzM9MzFOiE";
-const API_KEY = "AIzaSyAi3dqr2jwtGymEC8P4Mfl8kuLH-1GTeys";
+const sheetCache = new NodeCache({ stdTTL: 300 });
+
+const SHEET_ID = process.env.SHEET_ID;
+const API_KEY = process.env.GOOGLE_API_KEY;
 
 /* ================= API ROUTES ================= */
 
@@ -20,20 +23,22 @@ app.get("/api/sheet/:sheetName", async (req, res) => {
   try {
     const rawName = req.params.sheetName;
     const encodedName = encodeURIComponent(rawName);
-
     const range = `${encodedName}!A1:Z500`;
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`;
 
-    const response = await axios.get(url);
-    const data = response.data;
+    const cacheKey = `sheet-${rawName}`;
+    const cached = sheetCache.get(cacheKey);
 
-    if (data.error) {
-      return res.status(500).json({ error: data.error.message });
+    if (cached) {
+      return res.json(cached);
     }
 
-    res.json(data);
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`;
+    const response = await axios.get(url);
+
+    sheetCache.set(cacheKey, response.data);
+    res.json(response.data);
+
   } catch (err) {
-    console.error("Server error:", err.message);
     res.status(500).json({ error: err.message });
   }
 });

@@ -2,95 +2,64 @@ import React, { useMemo } from "react";
 import { useSheets } from "../context/SheetsContext";
 
 function mapSheet(values) {
-  if (!values || values.length < 3) return { headers: [], rows: [] };
-
-  const [, headers, ...rows] = values;
+  if (!values || values.length === 0) return { headers: [], rows: [] };
+  const [headers, ...rows] = values;
   return { headers, rows };
 }
 
 export default function BauchiPage() {
   const { bauchi, loading, error } = useSheets();
+  const { headers, rows } = mapSheet(bauchi);
 
   const {
-    headers,
-    rows,
     totalActivities,
-    totalThemes,
-    totalRecommendations,
-    totalPersonnel
+    thematicAreaCount,
+    recommendationCount,
+    responsibleCount,
   } = useMemo(() => {
-    const s = mapSheet(bauchi);
-    const headers = s.headers;
-    const rows = s.rows;
+    if (!rows || rows.length === 0) {
+      return {
+        totalActivities: 0,
+        thematicAreaCount: 0,
+        recommendationCount: 0,
+        responsibleCount: 0,
+      };
+    }
 
-    const themeIndex = headers.indexOf("Thematic Area");
-    const recIndex = headers.indexOf("High-Impact Recommendations");
-    const ownerIndex = headers.indexOf("Responsible Persons");
+    const dataRows = rows.slice(1);
+    const unique = (arr) => [...new Set(arr.filter(Boolean))];
 
-    const themes = new Set();
-    const personnel = new Set();
-    let recommendations = 0;
-
-    rows.forEach(r => {
-      const theme = r[themeIndex];
-      const rec = r[recIndex];
-      const owner = r[ownerIndex];
-
-      if (theme && theme.trim()) themes.add(theme.trim());
-      if (owner && owner.trim()) personnel.add(owner.trim());
-      if (rec && rec.trim()) recommendations++;
-    });
+    const thematicAreas = unique(dataRows.map((r) => r[0]?.trim()));
+    const recommendations = unique(dataRows.map((r) => r[2]?.trim()));
+    const responsiblePersons = unique(dataRows.map((r) => r[8]?.trim()));
 
     return {
-      headers,
-      rows,
-      totalActivities: rows.length,
-      totalThemes: themes.size,
-      totalRecommendations: recommendations,
-      totalPersonnel: personnel.size
+      totalActivities: dataRows.length,
+      thematicAreaCount: thematicAreas.length,
+      recommendationCount: recommendations.length,
+      responsibleCount: responsiblePersons.length,
     };
-  }, [bauchi]);
+  }, [rows]);
 
-  if (loading) return <div className="text-white">Loading Bauchi...</div>;
-  if (error) return <div className="text-red-400">Error: {error}</div>;
+  if (loading) return <div>Loading Bauchi...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
 
-      <h2 className="text-xl font-bold text-white">
+      <h1 className="text-2xl font-bold text-white">
         Detailed Remediation and Implementation Plan for EQAS Team ACE2 Gaps Finding
-      </h2>
+      </h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-
-        <div className="bg-blue-600 rounded-xl p-5 text-white shadow">
-          <div className="text-sm">Total Activities</div>
-          <div className="text-4xl font-bold">{totalActivities}</div>
-        </div>
-
-        <div className="bg-purple-600 rounded-xl p-5 text-white shadow">
-          <div className="text-sm">Thematic Area</div>
-          <div className="text-4xl font-bold">{totalThemes}</div>
-        </div>
-
-        <div className="bg-green-600 rounded-xl p-5 text-white shadow">
-          <div className="text-sm">High-Impact Recommendations</div>
-          <div className="text-4xl font-bold">{totalRecommendations}</div>
-        </div>
-
-        <div className="bg-orange-600 rounded-xl p-5 text-white shadow">
-          <div className="text-sm">Responsible Persons</div>
-          <div className="text-4xl font-bold">{totalPersonnel}</div>
-        </div>
-
-        <div className="bg-slate-700 rounded-xl p-5 text-white shadow flex flex-col items-center justify-center gap-2">
-          <div className="text-sm opacity-80">Active Filter</div>
-          <div className="text-lg font-semibold">Bauchi</div>
-        </div>
-
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="bg-blue-600 p-4 rounded text-white">Total Activities {totalActivities}</div>
+        <div className="bg-purple-600 p-4 rounded text-white">Thematic Area {thematicAreaCount}</div>
+        <div className="bg-green-600 p-4 rounded text-white">High Impact Recommendations {recommendationCount}</div>
+        <div className="bg-orange-600 p-4 rounded text-white">Responsible Persons {responsibleCount}</div>
+        <div className="bg-slate-700 p-4 rounded text-white text-center">Active Filter</div>
       </div>
 
-      <div className="bg-slate-800 rounded-xl shadow overflow-x-auto">
+      <div className="bg-slate-800 rounded-xl overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead className="bg-slate-700 text-white">
             <tr>
@@ -101,10 +70,15 @@ export default function BauchiPage() {
           </thead>
 
           <tbody>
-            {rows.map((row, i) => (
-              <tr key={i} className="border-b border-slate-700 hover:bg-slate-700/60">
-                {row.map((cell, j) => (
-                  <td key={j} className="px-4 py-2 text-slate-300">{cell}</td>
+            {rows.map((row, rIdx) => (
+              <tr
+                key={rIdx}
+                className={`border-b border-slate-700 ${
+                  rIdx === 0 ? "font-bold text-white bg-slate-700" : "text-slate-300"
+                }`}
+              >
+                {row.map((cell, cIdx) => (
+                  <td key={cIdx} className="px-4 py-2">{cell}</td>
                 ))}
               </tr>
             ))}
