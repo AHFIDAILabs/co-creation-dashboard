@@ -25,21 +25,26 @@ app.get("/api/sheet/:sheetName", async (req, res) => {
     const encodedName = encodeURIComponent(rawName);
     const range = `${encodedName}!A1:Z500`;
 
+    console.log("Sheet requested:", rawName);
+    console.log("SHEET_ID:", SHEET_ID);
+    console.log("API_KEY exists:", API_KEY ? "YES" : "NO");
+
     const cacheKey = `sheet-${rawName}`;
     const cached = sheetCache.get(cacheKey);
-
-    if (cached) {
-      return res.json(cached);
-    }
+    if (cached) return res.json(cached);
 
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`;
+    console.log("Google Sheets URL:", url);
+
     const response = await axios.get(url);
-
     sheetCache.set(cacheKey, response.data);
-    res.json(response.data);
 
+    res.json(response.data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.log("Google API error:", err.response?.data || err.message);
+    res.status(500).json({
+      error: err.response?.data?.error?.message || err.message,
+    });
   }
 });
 
@@ -48,17 +53,14 @@ app.get("/api/sheet/:sheetName", async (req, res) => {
 const frontendPath = path.join(__dirname, "../frontend/dist");
 app.use(express.static(frontendPath));
 
-// app.get("*", (req, res) => {
-//   res.sendFile(path.join(frontendPath, "index.html"));
-// });
-
-app.use((req, res) => {
+app.get("/*", (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 /* ================= PORT ================= */
 
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
   console.log(`Unified app running on port ${PORT}`);
 });
