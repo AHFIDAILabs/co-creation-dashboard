@@ -13,8 +13,7 @@ const sheetCache = new NodeCache({ stdTTL: 300 });
 const SHEET_ID = process.env.SHEET_ID;
 const API_KEY = process.env.GOOGLE_API_KEY;
 
-/* ================= API ROUTES ================= */
-
+/* API ROUTES */
 app.get("/api/test", (req, res) => {
   res.json({ message: "Backend is active and operational" });
 });
@@ -22,45 +21,31 @@ app.get("/api/test", (req, res) => {
 app.get("/api/sheet/:sheetName", async (req, res) => {
   try {
     const rawName = req.params.sheetName;
-    const encodedName = encodeURIComponent(rawName);
-    const range = `${encodedName}!A1:Z500`;
-
-    console.log("Sheet requested:", rawName);
-    console.log("SHEET_ID:", SHEET_ID);
-    console.log("API_KEY exists:", API_KEY ? "YES" : "NO");
-
+    const range = `${encodeURIComponent(rawName)}!A1:Z500`;
     const cacheKey = `sheet-${rawName}`;
+
     const cached = sheetCache.get(cacheKey);
     if (cached) return res.json(cached);
 
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`;
-    console.log("Google Sheets URL:", url);
 
     const response = await axios.get(url);
     sheetCache.set(cacheKey, response.data);
 
     res.json(response.data);
   } catch (err) {
-    console.log("Google API error:", err.response?.data || err.message);
-    res.status(500).json({
-      error: err.response?.data?.error?.message || err.message,
-    });
+    res.status(500).json({ error: err.message });
   }
 });
 
-/* ================= SERVE FRONTEND ================= */
-
+/* FRONTEND */
 const frontendPath = path.join(__dirname, "../frontend/dist");
 app.use(express.static(frontendPath));
 
-app.get("/*", (req, res) => {
+app.get("*", (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
 
-/* ================= PORT ================= */
-
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`Unified app running on port ${PORT}`);
-});
+/* PORT */
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log(`Running on port ${PORT}`));
