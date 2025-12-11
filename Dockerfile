@@ -1,7 +1,8 @@
 ##############################
 # 1. FRONTEND BUILD STAGE
 ##############################
-FROM node:18-alpine AS frontend-builder
+FROM node:22-alpine AS frontend-builder
+
 
 WORKDIR /app/frontend
 
@@ -20,7 +21,7 @@ RUN npm run build
 ##############################
 # 2. BACKEND BUILD STAGE
 ##############################
-FROM node:18-alpine AS backend-builder
+FROM node:22-alpine AS backend-builder
 
 WORKDIR /app/backend
 
@@ -36,7 +37,7 @@ COPY backend/ ./
 ##############################
 # 3. FINAL RUNTIME STAGE
 ##############################
-FROM node:18-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 

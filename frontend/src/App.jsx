@@ -2,7 +2,7 @@ import React from "react";
 import { SheetsProvider } from "./context/SheetsContext";
 
 import HomePage from "./pages/HomePage";
-import DashboardPage from "./pages/DashboardPage";
+import KeyPersonnelPage from "./pages/KeyPersonnelPage";
 import KanoPage from "./pages/KanoPage";
 import BauchiPage from "./pages/BauchiPage";
 import JigawaPage from "./pages/JigawaPage";
@@ -10,7 +10,7 @@ import JigawaPage from "./pages/JigawaPage";
 function HeaderPanel({ active, setActive }) {
   const tabs = [
     { id: "home", label: "Home" },
-    { id: "dashboard", label: "Dashboard" },
+    { id: "keyPersonnel", label: "Key Personnel" },
     { id: "kano", label: "Kano" },
     { id: "bauchi", label: "Bauchi" },
     { id: "jigawa", label: "Jigawa CC" },
@@ -30,7 +30,7 @@ function HeaderPanel({ active, setActive }) {
 
         <div>
           <div className="text-white/80 font-medium text-sm">Co Creation</div>
-          <div className="text-white font-bold text-xl">Dashboard</div>
+          <div className="text-white font-bold text-xl">Key Personnel</div>
         </div>
       </div>
 
@@ -68,7 +68,7 @@ function AppContent() {
 
   const renderPage = () => {
     if (active === "home") return <HomePage />;
-    if (active === "dashboard") return <DashboardPage />;
+    if (active === "keyPersonnel") return <KeyPersonnelPage />;
     if (active === "kano") return <KanoPage />;
     if (active === "bauchi") return <BauchiPage />;
     if (active === "jigawa") return <JigawaPage />;
