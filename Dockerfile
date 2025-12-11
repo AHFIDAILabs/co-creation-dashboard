@@ -1,31 +1,55 @@
-# ================================
-# 1. Build FRONTEND
-# ================================
-FROM node:18 AS build-frontend
+##############################
+# 1. FRONTEND BUILD STAGE
+##############################
+FROM node:18-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm install
+# Install only necessary dependencies using package*.json
+COPY frontend/package*.json ./
+RUN npm install --legacy-peer-deps
 
-COPY frontend ./
+# Copy frontend source
+COPY frontend/ ./
+
+# Build production frontend
 RUN npm run build
 
 
-# ================================
-# 2. Build BACKEND + copy frontend dist
-# ================================
-FROM node:18 AS backend
+
+##############################
+# 2. BACKEND BUILD STAGE
+##############################
+FROM node:18-alpine AS backend-builder
 
 WORKDIR /app/backend
 
-COPY backend/package.json backend/package-lock.json ./
-RUN npm install
+# Install backend dependencies first for caching efficiency
+COPY backend/package*.json ./
+RUN npm install --production
 
-COPY backend ./
-COPY --from=build-frontend /app/frontend/dist ../frontend/dist
+# Copy backend source
+COPY backend/ ./
 
-ENV PORT=10000
-EXPOSE 10000
 
-CMD ["node", "server.js"]
+
+##############################
+# 3. FINAL RUNTIME STAGE
+##############################
+FROM node:18-alpine AS runner
+
+WORKDIR /app
+
+# Copy backend build from builder
+COPY --from=backend-builder /app/backend ./backend
+
+# Copy frontend production build into backend's public directory
+COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
+
+# Ensure server.js can serve static frontend files
+ENV NODE_ENV=production
+ENV PORT=5000
+
+EXPOSE 5000
+
+CMD ["node", "backend/server.js"]
