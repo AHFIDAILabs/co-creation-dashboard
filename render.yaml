@@ -2,10 +2,8 @@ services:
   - type: web
     name: cocreation-dashboard
     env: docker
+    rootDir: .
     plan: starter
-    dockerfilePath: ./Dockerfile
-    envVars:
-      - key: GOOGLE_API_KEY
-        sync: false
-      - key: SHEET_ID
-        sync: false
+    buildCommand: ""        # Dockerfile handles the build
+    startCommand: ""        # Dockerfile defines CMD
+    autoDeploy: true
