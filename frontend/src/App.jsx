@@ -30,7 +30,7 @@ function HeaderPanel({ active, setActive }) {
 
         <div>
           <div className="text-white/80 font-medium text-sm">Co Creation</div>
-          <div className="text-white font-bold text-xl">Key Personnel</div>
+          <div className="text-white font-bold text-xl">Dashboard</div>
         </div>
       </div>
 
