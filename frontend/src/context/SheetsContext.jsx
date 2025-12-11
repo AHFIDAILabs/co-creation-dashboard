@@ -6,7 +6,7 @@ const SheetsContext = createContext();
 export const useSheets = () => useContext(SheetsContext);
 
 export const SheetsProvider = ({ children }) => {
-  const [dashboard, setDashboard] = useState(null);
+  const [keyPersonnel, setKeyPersonnel] = useState(null);
   const [kano, setKano] = useState(null);
   const [bauchi, setBauchi] = useState(null);
   const [jigawa, setJigawa] = useState(null);
@@ -18,12 +18,12 @@ export const SheetsProvider = ({ children }) => {
       setLoading(true);
       setError(null);
 
-      const dash = await fetchSheet("Dashboard");
+      const keyPersonnel = await fetchSheet("Key Personnel");
       const kanoSheet = await fetchSheet("Kano");
       const bauchiSheet = await fetchSheet("Bauchi");
       const jigawaSheet = await fetchSheet("Jigawa CC");
 
-      setDashboard(dash.values || []);
+      setKeyPersonnel(keyPersonnel.values || []);
       setKano(kanoSheet.values || []);
       setBauchi(bauchiSheet.values || []);
       setJigawa(jigawaSheet.values || []);
@@ -42,7 +42,7 @@ export const SheetsProvider = ({ children }) => {
   return (
     <SheetsContext.Provider
       value={{
-        dashboard,
+        keyPersonnel,
         kano,
         bauchi,
         jigawa,

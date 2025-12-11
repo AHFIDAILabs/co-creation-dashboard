@@ -7,8 +7,15 @@ function mapSheet(values) {
   return { headers, rows };
 }
 
+// Robust header lookup
+function findColumn(headers, name) {
+  return headers.findIndex(
+    h => h && h.trim().toLowerCase() === name.trim().toLowerCase()
+  );
+}
+
 export default function HomePage() {
-  const { dashboard, kano, bauchi, jigawa, loading, error } = useSheets();
+  const { keyPersonnel, kano, bauchi, jigawa, loading, error } = useSheets();
   const [activeFilter, setActiveFilter] = useState("All");
 
   const {
@@ -19,22 +26,24 @@ export default function HomePage() {
   } = useMemo(() => {
     const items = [];
 
-    // ---------------- DASHBOARD ----------------
-    const d = mapSheet(dashboard);
+    /* ================= KEY PERSONNEL ================= */
+    const d = mapSheet(keyPersonnel);
     const hd = d.headers;
 
     d.rows.forEach((r, i) => {
       items.push({
-        id: `dashboard-${i}`,
-        tab: "Dashboard",
-        category: r[hd.indexOf("Category")] || "",
-        issue: r[hd.indexOf("Activities")] || "",
-        frequency: r[hd.indexOf("Frequency")] || "",
-        status: r[hd.indexOf("Status")] || "",
+        id: `keyPersonnel-${i}`,
+        tab: "Key Personnel",
+        category: r[findColumn(hd, "Category")] || "",
+        issue: r[findColumn(hd, "Activities")] || "",
+        frequency: r[findColumn(hd, "Frequency")] || "",
+        status: r[findColumn(hd, "Status")] || "",
+        recommendation: "",
+        owner: ""
       });
     });
 
-    // ---------------- KANO ----------------
+    /* ================= KANO ================= */
     const k = mapSheet(kano);
     const hk = k.headers;
 
@@ -42,16 +51,16 @@ export default function HomePage() {
       items.push({
         id: `kano-${i}`,
         tab: "Kano",
-        category: r[hk.indexOf("Thematic Area")] || "",
-        issue: r[hk.indexOf("Key Gaps/Issue Identified")] || "",
-        recommendation: r[hk.indexOf("High-Impact Recommendations")] || "",
-        owner: r[hk.indexOf("Responsible Persons")] || "",
+        category: r[findColumn(hk, "Thematic Area")] || "",
+        issue: r[findColumn(hk, "Key Gaps/Issue Identified")] || "",
+        recommendation: r[findColumn(hk, "High-Impact Recommendations")] || "",
+        owner: r[findColumn(hk, "Responsible Persons")] || "",
         frequency: "",
-        status: "",
+        status: ""
       });
     });
 
-    // ---------------- BAUCHI ----------------
+    /* ================= BAUCHI ================= */
     const b = mapSheet(bauchi);
     const hb = b.headers;
 
@@ -59,16 +68,16 @@ export default function HomePage() {
       items.push({
         id: `bauchi-${i}`,
         tab: "Bauchi",
-        category: r[hb.indexOf("Thematic Area")] || "",
-        issue: r[hb.indexOf("Key Gaps/Issue Identified")] || "",
-        recommendation: r[hb.indexOf("High-Impact Recommendations")] || "",
-        owner: r[hb.indexOf("Responsible Persons")] || "",
+        category: r[findColumn(hb, "Thematic Area")] || "",
+        issue: r[findColumn(hb, "Key Gaps/Issue Identified")] || "",
+        recommendation: r[findColumn(hb, "High-Impact Recommendations")] || "",
+        owner: r[findColumn(hb, "Responsible Persons")] || "",
         frequency: "",
-        status: "",
+        status: ""
       });
     });
 
-    // ---------------- JIGAWA CC ----------------
+    /* ================= JIGAWA CC ================= */
     const j = mapSheet(jigawa);
     const hj = j.headers;
 
@@ -76,16 +85,16 @@ export default function HomePage() {
       items.push({
         id: `jigawa-${i}`,
         tab: "Jigawa CC",
-        category: r[hj.indexOf("Issues Identified")] || "",
-        issue: r[hj.indexOf("Action Point")] || "",
-        recommendation: r[hj.indexOf("ACTIVITIES")] || "",
-        owner: r[hj.indexOf("PERSON RESPONSIBLE")] || "",
+        category: r[findColumn(hj, "Issues Identified")] || "",
+        issue: r[findColumn(hj, "Action Point")] || "",
+        recommendation: r[findColumn(hj, "ACTIVITIES")] || "",
+        owner: r[findColumn(hj, "PERSON RESPONSIBLE")] || "",
         frequency: "",
-        status: "",
+        status: ""
       });
     });
 
-    // TOTALS
+    /* ================= TOTALS ================= */
     const people = new Set();
     items.forEach(i => i.owner && people.add(i.owner));
 
@@ -93,9 +102,9 @@ export default function HomePage() {
       mergedItems: items,
       totalIssues: items.length,
       totalRecommendations: items.filter(i => i.recommendation).length,
-      totalPersonnel: people.size,
+      totalPersonnel: people.size
     };
-  }, [dashboard, kano, bauchi, jigawa]);
+  }, [keyPersonnel, kano, bauchi, jigawa]);
 
   const filteredItems =
     activeFilter === "All"
@@ -134,7 +143,7 @@ export default function HomePage() {
             className="mt-2 w-full bg-white text-black rounded px-2 py-1"
           >
             <option>All</option>
-            <option>Dashboard</option>
+            <option>Key Personnel</option>
             <option>Kano</option>
             <option>Bauchi</option>
             <option>Jigawa CC</option>
@@ -155,7 +164,7 @@ export default function HomePage() {
             className="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-xl space-y-4"
           >
 
-            {/* Top row: Tab & Category */}
+            {/* Top row */}
             <div className="flex justify-between text-sm text-slate-300">
               <span>{i.tab}</span>
               <span>{i.category}</span>

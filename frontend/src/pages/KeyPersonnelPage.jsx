@@ -7,8 +7,8 @@ function mapSheet(values) {
   return { headers, rows };
 }
 
-export default function DashboardPage() {
-  const { dashboard, loading, error } = useSheets();
+export default function KeyPersonnelPage() {
+  const { keyPersonnel, loading, error } = useSheets();
   const [statusFilter, setStatusFilter] = useState("All");
 
   const {
@@ -20,7 +20,7 @@ export default function DashboardPage() {
     completedCount,
     filteredRows,
   } = useMemo(() => {
-    const d = mapSheet(dashboard);
+    const d = mapSheet(keyPersonnel);
     const headers = d.headers;
     const rows = d.rows;
 
@@ -54,9 +54,9 @@ export default function DashboardPage() {
       completedCount: completed,
       filteredRows: filtered,
     };
-  }, [dashboard, statusFilter]);
+  }, [keyPersonnel, statusFilter]);
 
-  if (loading) return <div className="text-white">Loading Dashboard...</div>;
+  if (loading) return <div className="text-white">Loading keyPersonnel...</div>;
   if (error) return <div className="text-red-400">Error: {error}</div>;
 
   return (
@@ -88,7 +88,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ================= TABLE SECTION TITLE ================= */}
-      <h2 className="text-lg font-bold text-white">Dashboard Activities</h2>
+      <h2 className="text-lg font-bold text-white">Key Personnel Tracker</h2>
 
       {/* ================= STATUS OVERVIEW (BAR STYLE) ================= */}
       <div className="bg-slate-800 p-6 rounded-xl shadow-lg space-y-3">
