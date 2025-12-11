@@ -1,75 +1,81 @@
-import React, { useEffect, useState } from "react";
-import { fetchSheet } from "../api";
+import React, { useMemo } from "react";
+import { useSheets } from "../context/SheetsContext";
 
-const BauchiPage = () => {
-  const [rows, setRows] = useState([]);
-  const [headers, setHeaders] = useState([]);
+function mapBauchi(values) {
+  if (!values || values.length < 2) return { headers: [], rows: [] };
 
-  useEffect(() => {
-    const load = async () => {
-      const data = await fetchSheet("Bauchi");
+  // Row 0 = long sentence (skip)
+  // Row 1 = headers
+  // Row 2..n = data
+  const headers = values[1];
+  const rows = values.slice(2);
 
-      if (!data?.values || data.values.length === 0) return;
+  return { headers, rows };
+}
 
-      let allRows = data.values;
+export default function BauchiPage() {
+  const { bauchi, loading, error } = useSheets();
 
-      // Remove long title sentence row
-      if (allRows[0][0] && allRows[0][0].length > 40) {
-        allRows = allRows.slice(1);
-      }
+  const { headers, rows, totalActivities, thematicCount, recoCount, respCount } =
+    useMemo(() => {
+      const d = mapBauchi(bauchi);
+      const headers = d.headers;
+      const rows = d.rows;
 
-      const hdr = allRows[0];
-      const body = allRows.slice(1);
+      const thematicIdx = headers.indexOf("Thematic Area");
+      const recoIdx = headers.indexOf("High-Impact Recommendations");
+      const respIdx = headers.indexOf("Responsible Persons");
 
-      setHeaders(hdr);
-      setRows(body);
-    };
+      const thematic = new Set();
+      const recos = new Set();
+      const resps = new Set();
 
-    load();
-  }, []);
+      rows.forEach((r) => {
+        if (r[thematicIdx]) thematic.add(r[thematicIdx]);
+        if (r[recoIdx]) recos.add(r[recoIdx]);
+        if (r[respIdx]) resps.add(r[respIdx]);
+      });
 
-  // Fuzzy index finder
-  function findColumn(headers, keyword) {
-    return headers.findIndex(h =>
-      h && h.toString().trim().toLowerCase().includes(keyword.toLowerCase())
-    );
-  }
+      return {
+        headers,
+        rows,
+        totalActivities: rows.length,
+        thematicCount: thematic.size,
+        recoCount: recos.size,
+        respCount: resps.size,
+      };
+    }, [bauchi]);
 
-  const thematicIdx = findColumn(headers, "thematic");
-  const recoIdx = findColumn(headers, "recommend");
-  const respIdx = findColumn(headers, "respons");
-
-  const totalActivities = rows.length;
-  const thematicCount = new Set(rows.map(r => r[thematicIdx])).size;
-  const recoCount = new Set(rows.map(r => r[recoIdx])).size;
-  const respCount = new Set(rows.map(r => r[respIdx])).size;
+  if (loading) return <div className="text-white">Loading Bauchi...</div>;
+  if (error) return <div className="text-red-400">Error: {error}</div>;
 
   return (
-    <div className="p-10 space-y-10">
+    <div className="space-y-10">
 
-      {/* PAGE TITLE */}
-      <h1 className="text-3xl font-bold text-gray-800">
+      {/* ================= TITLE ================= */}
+      <h1 className="text-2xl font-bold text-white">
         Detailed Remediation and Implementation Plan for EQAS Team ACE2 Gaps Finding
       </h1>
 
-      {/* KPI CARDS */}
-      <div className="grid grid-cols-5 gap-6">
+      {/* ================= KPI CARDS ================= */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+
         <div className="bg-blue-600 rounded-xl p-5 text-white shadow text-center">
           <div className="text-sm">Total Activities</div>
           <div className="text-4xl font-bold">{totalActivities}</div>
         </div>
 
-        <div className="bg-green-600 rounded-xl p-5 text-white shadow text-center">
+        <div className="bg-purple-600 rounded-xl p-5 text-white shadow text-center">
           <div className="text-sm">Thematic Area</div>
           <div className="text-4xl font-bold">{thematicCount}</div>
         </div>
 
-        <div className="bg-indigo-600 rounded-xl p-5 text-white shadow text-center">
+        <div className="bg-yellow-500 rounded-xl p-5 text-white shadow text-center">
           <div className="text-sm">High-Impact Recommendations</div>
           <div className="text-4xl font-bold">{recoCount}</div>
         </div>
 
-        <div className="bg-orange-600 rounded-xl p-5 text-white shadow text-center">
+        <div className="bg-green-600 rounded-xl p-5 text-white shadow text-center">
           <div className="text-sm">Responsible Persons</div>
           <div className="text-4xl font-bold">{respCount}</div>
         </div>
@@ -78,32 +84,40 @@ const BauchiPage = () => {
           <div className="text-sm">Active Filter</div>
           <div className="text-4xl font-bold">Bauchi</div>
         </div>
+
       </div>
 
-      {/* TABLE */}
-      <div className="overflow-x-auto shadow border rounded">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-200 font-bold">
-              {headers.map((h, idx) => (
-                <th key={idx} className="border p-2 text-left">{h}</th>
+      {/* ================= TABLE ================= */}
+      <div className="bg-slate-900 rounded-xl shadow-xl overflow-x-auto">
+
+        <table className="min-w-full text-sm text-left">
+
+          <thead className="bg-slate-700 text-white font-bold">
+            <tr>
+              {headers.map((h, i) => (
+                <th key={i} className="px-4 py-3">
+                  {h}
+                </th>
               ))}
             </tr>
           </thead>
+
           <tbody>
-            {rows.map((r, i) => (
-              <tr key={i} className="border-b">
-                {r.map((cell, j) => (
-                  <td key={j} className="border p-2">{cell}</td>
+            {rows.map((row, rIdx) => (
+              <tr key={rIdx} className="border-b border-slate-800 hover:bg-slate-800/40">
+                {row.map((cell, cIdx) => (
+                  <td key={cIdx} className="px-4 py-2 text-slate-300">
+                    {cell}
+                  </td>
                 ))}
               </tr>
             ))}
           </tbody>
+
         </table>
+
       </div>
 
     </div>
   );
-};
-
-export default BauchiPage;
+}
